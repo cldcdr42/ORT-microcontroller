@@ -71,6 +71,10 @@ void setTorqueLimit(char* cmd){
   limit_torque = myString.toFloat();
 };
 
+void updateHoldingAngle(char* cmd){
+  starting_angle = motor.shaft_angle * 180 / PI;
+};
+
 void rotateForAngle(char* cmd) {
   String myString = String(cmd);
   rotation_angle = myString.toFloat();
@@ -185,6 +189,7 @@ void setup() {
   commander.add('A',setAngleLimit,"Set allowed angle in degrees [A70]");
   commander.add('D',setTorqueLimit,"Set allowed torque [D0.05]");
   commander.add('Z',rotateForAngle,"Rotate for a specific angle Z[30]");
+  commander.add('V',updateHoldingAngle,"Make current angle as a new holding angle");
 
   // Custom command for command interface
   //    command.add('L', myFunc, "descr");
