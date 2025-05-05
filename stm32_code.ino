@@ -75,6 +75,20 @@ void updateHoldingAngle(char* cmd){
   starting_angle = motor.shaft_angle * 180 / PI;
 };
 
+void printData(float angle, float velocity) {
+  Serial.print("A;");
+  Serial.print(millis());
+  Serial.print(";");
+  Serial.print(angle * 180 / PI);
+  Serial.print("\r\n");
+
+  Serial.print("V;");
+  Serial.print(millis());
+  Serial.print(";");
+  Serial.print(velocity);
+  Serial.print("\r\n");
+}
+
 void rotateForAngle(char* cmd) {
   String myString = String(cmd);
   rotation_angle = myString.toFloat();
@@ -84,6 +98,9 @@ void rotateForAngle(char* cmd) {
   if (rotation_angle > 0) {
     while (motor.shaft_angle * 180 / PI < current_angle + rotation_angle) {
 
+      // printData(motor.shaft_angle, motor.shaft_velocity);
+      motor.monitor();
+/*
       Serial.print("A;");
       Serial.print(millis());
       Serial.print(";");
@@ -95,7 +112,7 @@ void rotateForAngle(char* cmd) {
       Serial.print(";");
       Serial.print(motor.shaft_velocity);
       Serial.print("\r\n");
-      
+   */   
       motor.target = limit_torque;
       motor.loopFOC();
       motor.move();
@@ -104,7 +121,10 @@ void rotateForAngle(char* cmd) {
 
   if (rotation_angle < 0) {
     while (motor.shaft_angle * 180 / PI > current_angle + rotation_angle) {
-
+      
+      //printData(motor.shaft_angle, motor.shaft_velocity);
+      motor.monitor();
+/*
       Serial.print("A;");
       Serial.print(millis());
       Serial.print(";");
@@ -116,7 +136,7 @@ void rotateForAngle(char* cmd) {
       Serial.print(";");
       Serial.print(motor.shaft_velocity);
       Serial.print("\r\n");
-
+*/
       motor.target = -limit_torque;
       motor.loopFOC();
       motor.move();
@@ -130,6 +150,18 @@ void rotateForAngle(char* cmd) {
 
 void setup() {
   Serial.begin(115200);
+ 
+  motor.useMonitoring(Serial);
+  SimpleFOCDebug::enable(NULL);
+  motor.monitor_separator = ';'; //!< monitor outputs separation character
+  //motor.monitor_end_char = '\n';
+  motor.monitor_start_char = 'D';
+
+  //display variables
+  motor.monitor_variables = _MON_TARGET | _MON_VEL | _MON_ANGLE; 
+  // downsampling
+  motor.monitor_downsample = 100; // default 10
+    
   //SimpleFOCDebug::enable(&Serial);
 
 
@@ -238,7 +270,8 @@ motor.shaft_velocity;   //motor velocity
 
 
 void loop() {
-
+  //printData(motor.shaft_angle, motor.shaft_velocity);
+/*
   // Printing value (send them to python script to collect in a file)
   Serial.print("A;");
   Serial.print(millis());
@@ -251,7 +284,7 @@ void loop() {
   Serial.print(";");
   Serial.print(motor.shaft_velocity);
   Serial.print("\r\n");
-  
+  */
   // Holding specific angle
   if ((motor.shaft_angle * 180 / PI) > (starting_angle + limit_angle)) { motor.target = -limit_torque; }
   else if ((motor.shaft_angle * 180 / PI) < (starting_angle - limit_angle)) { motor.target = limit_torque; }
@@ -260,6 +293,7 @@ void loop() {
   motor.loopFOC();
   motor.move();
 
+  motor.monitor();
   commander.run();
 }
 
